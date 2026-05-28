@@ -48,6 +48,25 @@ _banner() {
   echo -e ""
 }
 
+_check_deps() {
+  # Ensure git is installed before doing anything
+  if ! command -v git &>/dev/null; then
+    log_err "git is not installed. Install it from https://git-scm.com"
+    exit 1
+  fi
+
+  # Ensure the user has filled in their identities — catch unconfigured placeholders
+  local unconfigured=0
+  for var in U1_NAME U1_EMAIL U2_NAME U2_EMAIL; do
+    local val="${!var}"
+    if [[ -z "$val" || "$val" == *"your"* || "$val" == *"example.com"* ]]; then
+      log_err "$var is not configured. Open the script and set your identities."
+      unconfigured=1
+    fi
+  done
+  [[ $unconfigured -eq 1 ]] && exit 1
+}
+
 _check_git_repo() {
   if ! git rev-parse --is-inside-work-tree &>/dev/null; then
     log_err "Not inside a git repository."
@@ -70,6 +89,7 @@ _repo_context() {
 }
 
 _banner
+_check_deps
 _repo_context
 
 case "$1" in
